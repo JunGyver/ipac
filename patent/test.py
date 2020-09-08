@@ -1,3 +1,4 @@
+'''
 import httplib2
 import json, xmljson
 import xmltodict
@@ -19,3 +20,40 @@ print(apply_num)
 #jsonString = json.dumps(xmltodict.parse(result), indent=4)
 #json2 = json.loads(jsonString)
 #print(json2)
+'''
+import json
+from elasticsearch import Elasticsearch
+
+from django.views import View
+from django.http  import JsonResponse
+
+#from my_settings import ELASTICSEARCH
+
+class SearchView(View):
+    def get(self, request):
+        es = Elasticsearch('http://127.0.0.1:9200')
+
+        search_word = request.GET.get('search')
+
+        if not search_word:
+            return JsonResponse({'message':'INVALID_REQUEST'}, status=400)
+
+        data_list = es.search(
+            index       = 'dictionary',
+            filter_path = ['hits.hits._source'],
+            body        = {
+                "query" : {
+                    "multi_match" : {
+                        "query"  : search_word,
+                        "fields" : [
+                            "tags_name",
+                            "st_master_abstract",
+                            "st_master_title",
+                            "st_master_claim"
+                        ]
+                    }
+                }
+            }
+        )
+
+        return JsonResponse({'data': data_list}, status=200)
