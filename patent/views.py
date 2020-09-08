@@ -227,7 +227,7 @@ class MainView(View):
                 if data['tag'] in data.values() or data['status'] in data.values() or data['major'] or data['grade'] in data.values(): 
 
                     if data['status'] == "" and data['major'] =="" and data['grade']=="":
-                        index1 = tagsearch(y,kk,td)
+                        index1 = index2
                     elif data['major'] == "" and data['grade'] == "":
                         index1 = index2.filter(status_krjp__in=ll)
                     elif data['status'] =="" and data['grade'] == "":
