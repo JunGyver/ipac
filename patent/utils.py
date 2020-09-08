@@ -30,11 +30,14 @@ def query_debugger(func):
 
 
 def tagsearch(condition, data, date):
+    print(date)
     if len(date) ==2:
-        base = Master.objects.filter(Q(file_date__gte=date[0]) and Q(file_date__lte=date[1]))
+        base = Master.objects.filter(Q(file_date__range=date))
     else:
         base = Master.objects.all()
+    print(len(base))
     if condition == "and":
+        print("and")
         if len(data) == 1:
             b = base.filter(Q(tags__icontains=data[0]))
         if len(data) == 2:
@@ -46,6 +49,7 @@ def tagsearch(condition, data, date):
             
         return b
     elif condition == "or":
+        print("or")
         if len(data) == 1:
             b = base.filter(Q(tags__icontains=data[0]))
             
