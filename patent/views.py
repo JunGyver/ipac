@@ -186,7 +186,6 @@ class MainView(View):
     @query_debugger
     def get(self, request):
         tags = Tag.objects.select_related('category').prefetch_related('tagmaster').all()
-        
         tag_bucket = []
         for i in tags:
             a = (i.name, i.code, i.count)
@@ -195,7 +194,6 @@ class MainView(View):
         category_bucket = []
         for x in Category.objects.all():
             category_bucket.append([x.name, x.count])
-
 
         base = Master.objects.all()
         major = [x.major for x in base]
@@ -215,46 +213,44 @@ class MainView(View):
     @query_debugger
     def post(self, request):
         data = json.loads(request.body)
+        kk = data['tag'].split(',')
+        ll = data['status'].split(',')
+        uu = data['major'].split(',')
+        gg = data['grade'].split(',')
+        y  = data['condition']
+        td = data['date'].split(',')
+        index2 = tagsearch(y,kk,td)
+        stu = '서울과학기술대학교 산학협력단'
+
         if data['condition'] =='and':
-            print("and")
             if data['stu'] == 0:
                 if data['tag'] in data.values() or data['status'] in data.values() or data['major'] or data['grade'] in data.values(): 
-                    kk = data['tag'].split(',')
-                    ll = data['status'].split(',')
-                    uu = data['major'].split(',')
-                    gg = data['grade'].split(',')
-                    y  = data['condition']
-                    td = data['date'].split(',')
-                    index2 = tagsearch(y,kk,td)
 
                     if data['status'] == "" and data['major'] =="" and data['grade']=="":
                         index1 = tagsearch(y,kk,td)
                     elif data['major'] == "" and data['grade'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(status_krjp__in=ll)
                     elif data['status'] =="" and data['grade'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(major__in=uu)
                     elif data['major'] == "" and data['status'] == 0:
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(claim_grade__in=gg)
                     elif data['major'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(status_krjp__in=ll) & Q(claim_grade__in=gg))
                     elif data['status'] =="":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(major__in=uu) & Q(claim_grade__in=gg))
                     elif data['grade'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(major__in=uu) & Q(status_krjp=ll))
                     else:
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(status_krjp__in=ll) & Q(major__in=uu) & Q(claim_grade__in=gg))
 
                     tag_set=[]
+                    uni_set=[]
+                    grade_set=[]
                     for i in index1:
                         l = i.tags.split('|')
                         tag_set = tag_set + l
+                        uni_set.append(i.major)
+                        grade_set.append(i.claim_grade)
 
                     c = Counter(tag_set)
                     dd = list(c.values())
@@ -265,10 +261,13 @@ class MainView(View):
                             tagbase.get(code=x).name, x, y])
                     
                     tag_orders = sorted(bucket, key=lambda x: x[1])
-
                     listShow = [x.file_num for x in index1]
+                    major = Counter(uni_set)
+                    major_bucket = sorted(major.items(), key=lambda x:x[0])
+                    grade= Counter(grade_set)
+                    grade_bucket = sorted(grade.items(), key=lambda x:x[0])
 
-                    return JsonResponse({"totalNumber":index1.count(),"listshow":listShow,"totalTag":len(tag_set),"data":tag_orders})
+                    return JsonResponse({"totalNumber":index1.count(),"listshow":listShow,"totalTag":len(tag_set),"data":tag_orders,"major":major_bucket,"grade":grade_bucket})
 
                 else:
                     return JsonResponse({"message":"KeyError"})
@@ -276,45 +275,33 @@ class MainView(View):
                     
             elif data['stu'] == 1:
                 if data['tag'] in data.values() or data['status'] in data.values() or data['major'] in data.values() or data['grade'] in data.values(): 
-                    kk = data['tag'].split(',')
-                    ll = data['status'].split(',')
-                    uu = data['major'].split(',')
-                    gg = data['grade'].split(',')
-                    stu = '서울과학기술대학교 산학협력단'
-                    y  = data['condition']
-                    td = data['date']
-                    index2 = tagsearch(y,kk,td)
                     
                     if data['status'] == "" and data['major'] =="" and data['grade']=="":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(applicant__exact=stu)
                     elif data['major'] == "" and data['grade'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(status_krjp__in=ll) & Q(applicant__exact=stu))
                     elif data['status'] =="" and data['grade'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(major__in=uu) & Q(applicant__exact=stu))
                     elif data['major'] == "" and data['status'] == 0:
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(claim_grade__in=gg) & Q(applicant__exact=stu))
                     elif data['major'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(status_krjp__in=ll) & Q(claim_grade__in=gg) & Q(applicant__excat=stu))
                     elif data['status'] =="":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(major__in=uu) & Q(claim_grade__in=gg) & Q(applicant__excat=stu))
                     elif data['grade'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(major__in=uu) and Q(status_krjp=ll) & Q(applicant__exact=stu))
                     else:
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(status_krjp__in=ll) & Q(major__in=uu) & Q(claim_grade__in=gg) & Q(applicant__exact=stu))
                     
                     tag_set=[]
+                    uni_set=[]
+                    grade_set=[]
                     for i in index1:
                         l = i.tags.split('|')
                         tag_set = tag_set + l
-                    
+                        uni_set.append(i.major)
+                        grade_set.append(i.claim_grade)
+
                     c = Counter(tag_set)
                     dd = list(c.values())
                     tagbase = Tag.objects.select_related('category').all()
@@ -325,8 +312,12 @@ class MainView(View):
                     
                     tag_orders = sorted(bucket, key=lambda x: x[1])
                     listShow = [x.file_num for x in index1]
+                    major = Counter(uni_set)
+                    major_bucket = sorted(major.items(), key=lambda x:x[0])
+                    grade= Counter(grade_set)
+                    grade_bucket = sorted(grade.items(), key=lambda x:x[0])
 
-                    return JsonResponse({"TotalNumber":index1.count(),"listshow":listShow,"totalTag":len(tag_set),"data":tag_orders})
+                    return JsonResponse({"totalNumber":index1.count(),"listshow":listShow,"totalTag":len(tag_set),"data":tag_orders,"major":major_bucket,"grade":grade_bucket})
 
                 else:
                     return JsonResponse({"message":"KeyError"})
@@ -335,13 +326,6 @@ class MainView(View):
             print("or")
             if data['stu'] == 0:
                 if data['tag'] in data.values() or data['status'] in data.values() or data['major'] or data['grade']: 
-                    kk = data['tag'].split(',')
-                    ll = data['status'].split(',')
-                    uu = data['major'].split(',')
-                    gg = data['grade'].split(',')
-                    y  = data['condition']
-                    td = data['date']
-                    index2 = tagsearch(y,kk,td)
 
                     if data['status'] == "" and data['major'] =="" and data['grade']=="":
                         index1 = tagsearch(y,kk,td)
@@ -368,10 +352,14 @@ class MainView(View):
                         index1 = index2.filter(Q(status_krjp__in=ll) | Q(major__in=uu) | Q(claim_grade__in=gg))
 
                     tag_set=[]
+                    uni_set=[]
+                    grade_set=[]
                     for i in index1:
                         l = i.tags.split('|')
                         tag_set = tag_set + l
-                    
+                        uni_set.append(i.major)
+                        grade_set.append(i.claim_grade)
+
                     c = Counter(tag_set)
                     dd = list(c.values())
                     tagbase = Tag.objects.select_related('category').all()
@@ -382,8 +370,12 @@ class MainView(View):
                     
                     tag_orders = sorted(bucket, key=lambda x: x[1])
                     listShow = [x.file_num for x in index1]
+                    major = Counter(uni_set)
+                    major_bucket = sorted(major.items(), key=lambda x:x[0])
+                    grade= Counter(grade_set)
+                    grade_bucket = sorted(grade.items(), key=lambda x:x[0])
 
-                    return JsonResponse({"totalNumber":index1.count(),"listshow":listShow,"totalTag":len(tag_set),"data":tag_orders})
+                    return JsonResponse({"totalNumber":index1.count(),"listshow":listShow,"totalTag":len(tag_set),"data":tag_orders,"major":major_bucket,"grade":grade_bucket})
 
                 else:
                     return JsonResponse({"message":"KeyError"})
@@ -391,45 +383,33 @@ class MainView(View):
                     
             elif data['stu'] == 1:
                 if data['tag'] in data.values() or data['status'] in data.values() or data['major'] or data['grade']: 
-                    kk = data['tag'].split(',')
-                    ll = data['status'].split(',')
-                    uu = data['major'].split(',')
-                    gg = data['grade'].split(',')
-                    stu = '서울과학기술대학교 산학협력단'
-                    y  = data['condition']
-                    td = data['date']
-                    index2 = tagsearch(y,kk,td)
 
                     if data['status'] == "" and data['major'] =="" and data['grade']=="":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(applicant__exact=stu)
                     elif data['major'] == "" and data['grade'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(status_krjp__in=ll) & Q(applicant__exact=stu))
                     elif data['status'] =="" and data['grade'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(major__in=uu) & Q(applicant__exact=stu))
                     elif data['major'] == "" and data['status'] == 0:
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(claim_grade__in=gg) & Q(applicant__exact=stu))
                     elif data['major'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(status_krjp__in=ll) or Q(claim_grade__in=gg) & Q(applicant__exact=stu))
                     elif data['status'] =="":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(major__in=uu) or Q(claim_grade__in=gg) & Q(applicant__exact=stu))
                     elif data['grade'] == "":
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(major__in=uu) or Q(status_krjp=ll) & Q(applicant__exact=stu))
                     else:
-                        #index2 = tagsearch(y,kk)
                         index1 = index2.filter(Q(status_krjp__in=ll) or Q(major__in=uu) or Q(claim_grade__in=gg) & Q(applicant__exact=stu))
                     
                     tag_set=[]
+                    uni_set=[]
+                    grade_set=[]
                     for i in index1:
                         l = i.tags.split('|')
                         tag_set = tag_set + l
-                    
+                        uni_set.append(i.major)
+                        grade_set.append(i.claim_grade)
+
                     c = Counter(tag_set)
                     dd = list(c.values())
                     tagbase = Tag.objects.select_related('category').all()
@@ -440,8 +420,12 @@ class MainView(View):
                     
                     tag_orders = sorted(bucket, key=lambda x: x[1])
                     listShow = [x.file_num for x in index1]
+                    major = Counter(uni_set)
+                    major_bucket = sorted(major.items(), key=lambda x:x[0])
+                    grade= Counter(grade_set)
+                    grade_bucket = sorted(grade.items(), key=lambda x:x[0])
 
-                    return JsonResponse({"TotalNumber":index1.count(),"listshow":listShow,"totalTag":len(tag_set),"data":tag_orders})
+                    return JsonResponse({"totalNumber":index1.count(),"listshow":listShow,"totalTag":len(tag_set),"data":tag_orders,"major":major_bucket,"grade":grade_bucket})
 
                 else:
                     return JsonResponse({"message":"KeyError"})
