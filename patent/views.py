@@ -282,7 +282,8 @@ class MainView(View):
                     gg = data['grade'].split(',')
                     stu = '서울과학기술대학교 산학협력단'
                     y  = data['condition']
-                    index2 = tagsearch(y,kk)
+                    td = data['date']
+                    index2 = tagsearch(y,kk,td)
                     
                     if data['status'] == "" and data['major'] =="" and data['grade']=="":
                         #index2 = tagsearch(y,kk)
@@ -339,10 +340,11 @@ class MainView(View):
                     uu = data['major'].split(',')
                     gg = data['grade'].split(',')
                     y  = data['condition']
-                    index2 = tagsearch(y,kk)
+                    td = data['date']
+                    index2 = tagsearch(y,kk,td)
 
                     if data['status'] == "" and data['major'] =="" and data['grade']=="":
-                        index1 = tagsearch(y,kk)
+                        index1 = tagsearch(y,kk,td)
                     elif data['major'] == "" and data['grade'] == "":
                         #index2 = tagsearch(y,kk)
                         index1 = index2.filter(status_krjp__in=ll)
@@ -395,7 +397,8 @@ class MainView(View):
                     gg = data['grade'].split(',')
                     stu = '서울과학기술대학교 산학협력단'
                     y  = data['condition']
-                    index2 = tagsearch(y,kk)
+                    td = data['date']
+                    index2 = tagsearch(y,kk,td)
 
                     if data['status'] == "" and data['major'] =="" and data['grade']=="":
                         #index2 = tagsearch(y,kk)
