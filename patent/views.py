@@ -1,3 +1,4 @@
+import os
 import json, xmljson
 import requests
 import httplib2
@@ -7,7 +8,6 @@ from django.db.models import Q, Count
 from datetime import datetime, timedelta
 from collections import OrderedDict, Counter
 from django.http import JsonResponse
-from background_task import background
 from django.views import View
 from .models import Master, History
 from .utils import query_debugger, tagsearch
@@ -459,37 +459,43 @@ class ListView(View):
             source = ({
                 "status": base.status_krjp,
                 "file_num, file_date":(base.file_num, base.file_date),
-                "pub_num":base.pub_num,
+                "pub_num, pub_date":(base.pub_num, base.pub_date),
                 "applicant, inventor":(base.applicant.split(' |'), base.inventor.split(' | ')),
                 "patentee":base.patentee,
                 "major, main_inventor":(base.major, base.main_inventor),
                 "grade":base.claim_grade,
-                "title, tags":(base.title, base.tags.split('|')),
+                "title, tags":(base.title, [Tag.objects.get(code=x).name for x in base.tags.split('|')]),
             })
             list_bucket.append(source)
 
         return JsonResponse({"list":list_bucket})
 
 class DetailView(View):
-
+    
     def post(self, request):
         data=json.loads(request.body)
         list_bucket = []
         for x in data['listshow']:
             base = Master.objects.get(file_num=x)
             source = ({
-                "status": base.status_krjp,
-                "file_num, file_date":(base.file_num, base.file_date),
-                "pub_num":base.pub_num,
+                "number":data['listshow'].index(x)+1,
+                "title":base.title,
                 "applicant, inventor":(base.applicant.split(' |'), base.inventor.split(' | ')),
-                "patentee":base.patentee,
                 "major, main_inventor":(base.major, base.main_inventor),
-                "grade":base.claim_grade,
-                "title, tags":(base.title, base.tags.split('|')),
+                "patentee":base.patentee,
+                "file_num, file_date":(base.file_num, base.file_date),
+                "pub_num, pub_date":(base.pub_num, base.pub_date),
+                "reg_num, reg_date":(base.reg_num, base.reg_date),
+                "tag":base.tags.split('|'),
+                "abstract":base.abstract,
+                "claim":base.claim,
+                "main_image":"update soon"
             })
             list_bucket.append(source)
 
-        return JsonResponse({"list":list_bucket})
+        return JsonResponse({
+            "side":"",
+            "list":list_bucket})
 
 
 
@@ -498,15 +504,14 @@ class DetailView(View):
 class TestView(View):
     def post(self, request):
         #a = request.GET.get('test', None)
-        data = json.loads(request.body)
-        bb= data['status'].split(',')
-        print(bb)
-        c = []
-        b = tagsearch(bb)
-        #b = Master.objects.filter(Q(tags__icontains='A001') & Q(tags__contains='D053'))
-        print(b)
-            
-        #print(c)
+        #data = open('/home/jun_guyver/nd/ipac/patent/imgs/kr00000302949b1p.jpg', 'r')
+        for filename in os.listdir('/home/jun_guyver/nd/ipac/patent/imgs'):
+            with open(os.path.join('home/jun_guyver/nd/ipac/patent/imgs', filename), 'r') as f:
+                print(f)
+        #print(data.name)
+        #cc = Master.objects.filter(pub_num__icontains=bb)
+        #print(cc)
+        
 
         return JsonResponse({"Result":"f"})
     
