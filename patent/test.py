@@ -1,4 +1,31 @@
 '''
+import json    
+import PyPDF2
+
+pdf_file = open('aa.pdf', 'rb')
+read_pdf = PyPDF2.PdfFileReader(pdf_file)
+print(read_pdf)
+number_of_pages = read_pdf.getNumPages()
+page = read_pdf.getPage(0)
+page_content = page.extractText()
+
+print(page_content)
+
+def get_data(page_content):
+    _dict = {}
+    page_content_list = page_content.splitlines()
+    for line in page_content_list:
+        if ':' not in line:
+            continue
+        key, value = line.split(':')
+        _dict[key.strip()] = value.strip()
+    return _dict
+
+page_data = get_data(page_content)
+json_data = json.dumps(page_data, indent=4)
+print(json_data)
+
+
 import httplib2
 import json, xmljson
 import xmltodict
@@ -20,7 +47,7 @@ print(apply_num)
 #jsonString = json.dumps(xmltodict.parse(result), indent=4)
 #json2 = json.loads(jsonString)
 #print(json2)
-'''
+
 import json
 from elasticsearch import Elasticsearch
 
@@ -57,3 +84,4 @@ class SearchView(View):
         )
 
         return JsonResponse({'data': data_list}, status=200)
+'''
