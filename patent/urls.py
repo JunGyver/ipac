@@ -4,6 +4,7 @@ from .views import (
     HistoryView,
     MainView,
     ListView,
+    DetailView,
     TestView,
     KeywordSearch,
 )
@@ -15,4 +16,5 @@ urlpatterns = [
     path('test', TestView.as_view()),
     path('list', ListView.as_view()),
     path('keyword', KeywordSearch.as_view()),
+    path('detail', DetailView.as_view()),
 ]

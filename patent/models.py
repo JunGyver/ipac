@@ -155,3 +155,8 @@ class History(models.Model):
 
     class Meta:
         db_table = 'histories'
+
+class Image(models.Model):
+    main_image = models.ImageField(blank=True, upload_to='media/main')
+    sub_image = models.ImageField(blank=True, upload_to='media/sub')
+    master = models.ForeignKey('Master', on_delete=models.SET_NULL, null=True)
