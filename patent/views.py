@@ -456,6 +456,11 @@ class ListView(View):
         list_bucket = []
         for x in data['listshow']:
             base = Master.objects.get(file_num=x)
+            tagging = base.tags.split('|')
+            tag_bucket = []
+            for i in tagging:
+                t = Tag.objects.get(code=i)
+                tag_bucket.append([t.name,t.code])
             source = ({
                 "status": base.status_krjp,
                 "file_num, file_date":(base.file_num, base.file_date),
@@ -464,7 +469,7 @@ class ListView(View):
                 "patentee":base.patentee,
                 "major, main_inventor":(base.major, base.main_inventor),
                 "grade":base.claim_grade,
-                "title, tags":(base.title, [Tag.objects.get(code=x).name for x in base.tags.split('|')]),
+                "title, tags":(base.title, tag_bucket),
             })
             list_bucket.append(source)
 
@@ -477,6 +482,11 @@ class DetailView(View):
         list_bucket = []
         for x in data['listshow']:
             base = Master.objects.get(file_num=x)
+            tagging = base.tags.split('|')
+            tag_bucket = []
+            for i in tagging:
+                t = Tag.objects.get(code=i)
+                tag_bucket.append([t.name,t.code])
             source = ({
                 "number":data['listshow'].index(x)+1,
                 "title":base.title,
@@ -486,7 +496,7 @@ class DetailView(View):
                 "file_num, file_date":(base.file_num, base.file_date),
                 "pub_num, pub_date":(base.pub_num, base.pub_date),
                 "reg_num, reg_date":(base.reg_num, base.reg_date),
-                "tag":base.tags.split('|'),
+                "tag":tag_bucket,
                 "abstract":base.abstract,
                 "claim":base.claim,
                 "main_image":"update soon"
