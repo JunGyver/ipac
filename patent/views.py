@@ -458,7 +458,28 @@ class ListView(View):
             base = Master.objects.get(file_num=x)
             source = ({
                 "status": base.status_krjp,
-                "file_num":base.file_num,
+                "file_num, file_date":(base.file_num, base.file_date),
+                "pub_num":base.pub_num,
+                "applicant, inventor":(base.applicant.split(' |'), base.inventor.split(' | ')),
+                "patentee":base.patentee,
+                "major, main_inventor":(base.major, base.main_inventor),
+                "grade":base.claim_grade,
+                "title, tags":(base.title, base.tags.split('|')),
+            })
+            list_bucket.append(source)
+
+        return JsonResponse({"list":list_bucket})
+
+class DetailView(View):
+
+    def post(self, request):
+        data=json.loads(request.body)
+        list_bucket = []
+        for x in data['listshow']:
+            base = Master.objects.get(file_num=x)
+            source = ({
+                "status": base.status_krjp,
+                "file_num, file_date":(base.file_num, base.file_date),
                 "pub_num":base.pub_num,
                 "applicant, inventor":(base.applicant.split(' |'), base.inventor.split(' | ')),
                 "patentee":base.patentee,
