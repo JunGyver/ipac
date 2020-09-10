@@ -12,6 +12,7 @@ from django.views import View
 from .models import Master, History
 from .utils import query_debugger, tagsearch
 from tag.models import Tag, Category
+from my_settings import KIPRIS
 
 class ChartView(View):
     @query_debugger
@@ -144,43 +145,44 @@ class ChartView(View):
         return JsonResponse({f"Professor in {data['major']}":quatro})
 
 
-class HistoryView(View):
-    #@background(schedule=20)
+class UpdateMaster(View):
     def get(self, request):
-        apply_num = Master.objects.all().last()
-        b = apply_num.file_num.split('-')
-        n = ''
-        for i in b:
-            n = n + i
-        
-        url = f'http://plus.kipris.or.kr/openapi/rest/RelatedDocsonfilePatService/relatedDocsonfileInfo?applicationNumber={n}&accessKey=QWSwer5evYdATtLpvybUIqIPUQZR6ATVfDNMLksLZMU='
+        base = Master.objects.all().order_by("-file_date")[:1]
+        for x in base:
+            file_num = "".join(x.file_num.split('-'))
+            url = f'http://plus.kipris.or.kr/kipo-api/kipi/patUtiModInfoSearchSevice/getBibliographyDetailInfoSearch?applicationNumber={file_num}&ServiceKey={KIPRIS}'
+            h = httplib2.Http()
+            response, content = h.request(url, 'GET')
+            result = content.decode('utf-8')
+            jsonString = json.dumps(xmltodict.parse(result), indent=4)
+            json2 = json.loads(jsonString)
+            path = json2['response']['body']['item']['biblioSummaryInfoArray']['biblioSummaryInfo']
+            path2 = json2['response']['body']['item']["abstractInfoArray"]["abstractInfo"]
+            path3 = json2['response']['body']['item']["claimInfoArray"]["claimInfo"]
+            path4 = json2['response']['body']['item']["applicantInfoArray"]["applicantInfo"]
+            path5 = json2['response']['body']['item']["inventorInfoArray"]["inventorInfo"]
+            path6 = json2['response']['body']['item']["imagePathInfo"]
+            print(path['applicationNumber'])
+            x.title  = path["inventionTitle"]
+            x.title2 = path["inventionTitleEng"]
+            x.abstract = path2["astrtCont"]
+            x.claim = path3[0]["claim"]
+            x.file_num = path["applicationNumber"]
+            x.file_date= path["applicationDate"].replace('.','-')
+            x.pub_num = path["openNumber"]
+            x.pub_date = path["openDate"].replace('.','-')
+            x.pub_num2 = path["publicationNumber"]
+            x.pub_date2 = path["publicationDate"]
+            x.reg_num = path["registerNumber"]
+            x.reg_date = path["registerDate"].replace('.','-') if path["registerDate"] != None else None 
+            x.applicant = path4['name']
+            x.applicant2 = path4["engName"]
+            x.inventor = path5['name']
+            x.status = path["registerStatus"]
+            x.img_src = path6["largePath"]
+            x.save()
 
-
-        h = httplib2.Http()
-        response, content = h.request(url, 'GET')
-        result = content.decode('utf-8')
-        jsonString = json.dumps(xmltodict.parse(result), indent=4)
-        json2 = json.loads(jsonString)
-        ff = len(json2['response']['body']['items']['relateddocsonfileInfo'])
-        t = json2['response']['body']['items']['relateddocsonfileInfo']
-        for i in t:
-            if History.objects.filter(documentNumber=i['documentNumber']).exists():
-                pass
-            else:
-                History.objects.create(
-                    applicationNumber = i['applicationNumber'],
-                    documentNumber    = i['documentNumber'],
-                    documentDate      = i['documentDate'],
-                    documentTitle     = i['documentTitle'],
-                    documentTitleEng  = i['documentTitleEng'],
-                    status            = i['status'],
-                    statusEng         = i['statusEng'],
-                    step              = i['step'],
-                    trialNumber       = i['trialNumber'],
-                    registrationNumber = i['registrationNumber'],
-                    master_id         = apply_num.data_id)
-            
-        return JsonResponse({"message":"success"})
+            return JsonResponse({"message":"success"})
 
 class MainView(View):
     @query_debugger
@@ -517,23 +519,38 @@ class Register(View):
 
 
 class TestView(View):
-    def post(self, request):
-        #a = request.GET.get('test', None)
-        #data = open('/home/jun_guyver/nd/ipac/patent/imgs/kr00000302949b1p.jpg', 'r')
-        for filename in os.listdir('/home/jun_guyver/nd/ipac/patent/imgs'):
-            with open(os.path.join('home/jun_guyver/nd/ipac/patent/imgs', filename), 'r') as f:
-                print(f)
-        #print(data.name)
-        #cc = Master.objects.filter(pub_num__icontains=bb)
-        #print(cc)
-        
-
-        return JsonResponse({"Result":"f"})
-    
     def get(self, request):
-        m = Master.objects.all().order_by('file_date')
-        mm = [x.file_date for x in m]
-        mmm = Counter(mm)
-        mmmm = [x for x in mmm]
-        return JsonResponse({"mmm":mmmm})
-    
+        apply_num = Master.objects.all().last()
+        b = apply_num.file_num.split('-')
+        n = ''
+        for i in b:
+            n = n + i
+        
+        url = f'http://plus.kipris.or.kr/openapi/rest/RelatedDocsonfilePatService/relatedDocsonfileInfo?applicationNumber={n}&accessKey=QWSwer5evYdATtLpvybUIqIPUQZR6ATVfDNMLksLZMU='
+
+
+        h = httplib2.Http()
+        response, content = h.request(url, 'GET')
+        result = content.decode('utf-8')
+        jsonString = json.dumps(xmltodict.parse(result), indent=4)
+        json2 = json.loads(jsonString)
+        ff = len(json2['response']['body']['items']['relateddocsonfileInfo'])
+        t = json2['response']['body']['items']['relateddocsonfileInfo']
+        for i in t:
+            if History.objects.filter(documentNumber=i['documentNumber']).exists():
+                pass
+            else:
+                History.objects.create(
+                    applicationNumber = i['applicationNumber'],
+                    documentNumber    = i['documentNumber'],
+                    documentDate      = i['documentDate'],
+                    documentTitle     = i['documentTitle'],
+                    documentTitleEng  = i['documentTitleEng'],
+                    status            = i['status'],
+                    statusEng         = i['statusEng'],
+                    step              = i['step'],
+                    trialNumber       = i['trialNumber'],
+                    registrationNumber = i['registrationNumber'],
+                    master_id         = apply_num.data_id)
+            
+        return JsonResponse({"message":"success"})
