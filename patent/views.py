@@ -443,11 +443,6 @@ class KeywordSearch(View):
         
         except KeyError:
             JsonResponse({"mesage":"KEY_ERROR"})
-        '''
-        answer = Tag.objects.filter(Q(name__startswith=word) | Q(name__endswith=word) | Q(name__in=word) | Q(name__contains=word))
-        print(answer[0].code)
-'''
-
 
 class ListView(View):
     @query_debugger
@@ -476,7 +471,7 @@ class ListView(View):
         return JsonResponse({"list":list_bucket})
 
 class DetailView(View):
-    
+    @query_debugger
     def post(self, request):
         data=json.loads(request.body)
         list_bucket = []
@@ -507,8 +502,18 @@ class DetailView(View):
             "side":"",
             "list":list_bucket})
 
-
-
+class Register(View):
+    @query_debugger
+    def post(self, request):
+        '''
+        base = request.FILES['pdf']
+        parsed_data = pdftodocs(base)
+        data = json.loads(parsed_data)
+        Master.objects.create(
+            title = data['title'],
+        ).save()
+        '''
+        pass
 
 
 class TestView(View):
