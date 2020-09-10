@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'tag',
     'patent',
     'user',
-    'django_crontab',
 ]
 
 MIDDLEWARE = [
